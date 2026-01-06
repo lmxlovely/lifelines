@@ -1,0 +1,24 @@
+{
+  "$schema": "https://zeabur.com/schema.json",
+  "project": {
+    "name": "lifelines"
+  },
+  "services": [
+    {
+      "name": "backend",
+      "template": "DOCKERFILE",
+      "path": "./backend",
+      "env": {
+        "PORT": "8000"
+      }
+    },
+    {
+      "name": "frontend",
+      "template": "NEXTJS",
+      "path": "./frontend",
+      "env": {
+        "NEXT_PUBLIC_API_URL": "${backend.URL}"
+      }
+    }
+  ]
+}
