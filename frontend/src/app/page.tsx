@@ -1,12 +1,13 @@
 'use client'
 
-import React, { useState, useCallback, useEffect } from 'react'
+import React, { useState, useCallback, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Heart, Sparkles, Play, Pause, SkipForward, RotateCcw } from 'lucide-react'
+import { Heart, Sparkles, Play, Pause, SkipForward, RotateCcw, Volume2, VolumeX } from 'lucide-react'
 import LineChart from '@/components/LineChart'
 import ParticleEffects, { FloatingParticles, ReunionText } from '@/components/ParticleEffects'
 import { predictStory } from '@/lib/api'
 import { StoryResponse, StoryEvent } from '@/types'
+import useAudio from '@/hooks/useAudio'
 
 export default function Home() {
   // 表单状态
@@ -23,6 +24,23 @@ export default function Home() {
   // 特效状态
   const [showReunionText, setShowReunionText] = useState(false)
   const [triggerConfetti, setTriggerConfetti] = useState(false)
+
+  // 音乐状态
+  const [isMuted, setIsMuted] = useState(false)
+  
+  // 普通背景音乐 - 故事播放时就有
+  const { 
+    play: playNormalBgm, 
+    stop: stopNormalBgm, 
+    isPlaying: isNormalBgmPlaying 
+  } = useAudio('/audio/story-bgm.mp3', { volume: 0.3, loop: true })
+  
+  // 彩蛋专属音乐 - 只有李彦&李梦祥触发时才播放
+  const { 
+    play: playReunionBgm, 
+    stop: stopReunionBgm, 
+    isPlaying: isReunionBgmPlaying 
+  } = useAudio('/audio/reunion-bgm.mp3', { volume: 0.5, loop: true })
 
   // 提交表单
   const handleSubmit = async (e: React.FormEvent) => {
@@ -41,7 +59,13 @@ export default function Home() {
       const data = await predictStory({ name1: name1.trim(), name2: name2.trim() })
       setStoryData(data)
       // 自动开始播放
-      setTimeout(() => setIsPlaying(true), 500)
+      setTimeout(() => {
+        setIsPlaying(true)
+        // 播放普通背景音乐
+        if (!isMuted) {
+          playNormalBgm()
+        }
+      }, 500)
     } catch (err) {
       setError('无法连接到服务器，请稍后重试')
       console.error(err)
@@ -65,6 +89,11 @@ export default function Home() {
             setTimeout(() => {
               setShowReunionText(true)
               setTriggerConfetti(true)
+              // 停止普通音乐，播放彩蛋专属音乐
+              if (!isMuted) {
+                stopNormalBgm()
+                playReunionBgm()
+              }
             }, 500)
           }
           return prev
@@ -91,6 +120,9 @@ export default function Home() {
     setIsPlaying(false)
     setShowReunionText(false)
     setTriggerConfetti(false)
+    // 停止所有音乐
+    stopNormalBgm()
+    stopReunionBgm()
   }
 
   const currentEvent: StoryEvent | undefined = storyData?.events[currentIndex]
@@ -335,6 +367,40 @@ export default function Home() {
                     title="下一个"
                   >
                     <SkipForward className="w-5 h-5" />
+                  </motion.button>
+
+                  {/* 音乐控制按钮 - 始终显示 */}
+                  <motion.button
+                    onClick={() => {
+                      const newMuted = !isMuted
+                      setIsMuted(newMuted)
+                      if (newMuted) {
+                        // 静音：停止所有音乐
+                        stopNormalBgm()
+                        stopReunionBgm()
+                      } else {
+                        // 取消静音：根据当前状态播放对应音乐
+                        if (showReunionText && storyData?.is_special) {
+                          playReunionBgm()
+                        } else if (isPlaying || storyData) {
+                          playNormalBgm()
+                        }
+                      }
+                    }}
+                    className={`p-3 rounded-full transition-colors ${
+                      isDestinyTheme
+                        ? 'bg-white/10 hover:bg-white/20 text-white'
+                        : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                    }`}
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    title={isMuted ? '开启音乐' : '关闭音乐'}
+                  >
+                    {isMuted ? (
+                      <VolumeX className="w-5 h-5" />
+                    ) : (
+                      <Volume2 className="w-5 h-5" />
+                    )}
                   </motion.button>
                 </div>
 
