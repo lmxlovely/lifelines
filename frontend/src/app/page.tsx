@@ -27,6 +27,7 @@ export default function Home() {
 
   // 音乐状态
   const [isMuted, setIsMuted] = useState(false)
+  const [musicEnabled, setMusicEnabled] = useState(false) // 用户是否已启用音乐
   
   // 普通背景音乐 - 故事播放时就有
   const { 
@@ -42,10 +43,20 @@ export default function Home() {
     isPlaying: isReunionBgmPlaying 
   } = useAudio('/audio/reunion-bgm.mp3', { volume: 0.5, loop: true })
 
+  // 第一次点击时启用音乐（解决浏览器自动播放限制）
+  const enableMusicOnInteraction = useCallback(() => {
+    if (!musicEnabled && !isMuted) {
+      setMusicEnabled(true)
+    }
+  }, [musicEnabled, isMuted])
+
   // 提交表单
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!name1.trim() || !name2.trim()) return
+
+    // 用户点击了按钮，可以播放音乐了
+    setMusicEnabled(true)
 
     setIsLoading(true)
     setError(null)
@@ -61,10 +72,6 @@ export default function Home() {
       // 自动开始播放
       setTimeout(() => {
         setIsPlaying(true)
-        // 播放普通背景音乐
-        if (!isMuted) {
-          playNormalBgm()
-        }
       }, 500)
     } catch (err) {
       setError('无法连接到服务器，请稍后重试')
@@ -73,6 +80,13 @@ export default function Home() {
       setIsLoading(false)
     }
   }
+
+  // 音乐播放控制 - 故事开始时播放普通音乐
+  useEffect(() => {
+    if (isPlaying && storyData && musicEnabled && !isMuted && !showReunionText) {
+      playNormalBgm()
+    }
+  }, [isPlaying, storyData, musicEnabled, isMuted, showReunionText])
 
   // 自动播放逻辑
   useEffect(() => {
@@ -90,7 +104,7 @@ export default function Home() {
               setShowReunionText(true)
               setTriggerConfetti(true)
               // 停止普通音乐，播放彩蛋专属音乐
-              if (!isMuted) {
+              if (musicEnabled && !isMuted) {
                 stopNormalBgm()
                 playReunionBgm()
               }
@@ -103,7 +117,7 @@ export default function Home() {
     }, 2500) // 每 2.5 秒推进一步
 
     return () => clearInterval(timer)
-  }, [isPlaying, storyData])
+  }, [isPlaying, storyData, musicEnabled, isMuted])
 
   // 控制函数
   const togglePlay = () => setIsPlaying(!isPlaying)
@@ -374,6 +388,7 @@ export default function Home() {
                     onClick={() => {
                       const newMuted = !isMuted
                       setIsMuted(newMuted)
+                      setMusicEnabled(true) // 用户点击了，启用音乐
                       if (newMuted) {
                         // 静音：停止所有音乐
                         stopNormalBgm()
@@ -382,7 +397,7 @@ export default function Home() {
                         // 取消静音：根据当前状态播放对应音乐
                         if (showReunionText && storyData?.is_special) {
                           playReunionBgm()
-                        } else if (isPlaying || storyData) {
+                        } else if (storyData) {
                           playNormalBgm()
                         }
                       }
