@@ -182,22 +182,22 @@ export default function Home() {
               />
             </div>
 
-            {/* Heart Icon */}
+            {/* Connection Icon */}
             <motion.div
               animate={{
                 scale: [1, 1.2, 1],
-                rotate: [0, 10, -10, 0],
               }}
               transition={{
                 duration: 2,
                 repeat: Infinity,
                 ease: 'easeInOut',
               }}
+              className="relative"
             >
-              <Heart
+              <Sparkles
                 className={`w-8 h-8 ${
-                  isDestinyTheme ? 'text-pink-400' : 'text-pink-500'
-                } fill-current`}
+                  isDestinyTheme ? 'text-yellow-400' : 'text-purple-500'
+                }`}
               />
             </motion.div>
 
@@ -414,7 +414,7 @@ export default function Home() {
                       animate={{ opacity: 1 }}
                       transition={{ delay: 0.4 }}
                     >
-                      <span>心灵距离</span>
+                      <span>距离指数</span>
                       <div
                         className={`w-32 h-2 rounded-full overflow-hidden ${
                           isDestinyTheme ? 'bg-white/10' : 'bg-gray-200'
@@ -439,12 +439,12 @@ export default function Home() {
                       </div>
                       <span>
                         {currentEvent.distance === 0
-                          ? '❤️ 心心相印'
+                          ? '✨ 命运缠绕'
                           : currentEvent.distance < 30
-                          ? '💕 亲密无间'
+                          ? '🤝 亲密无间'
                           : currentEvent.distance < 60
-                          ? '💛 若即若离'
-                          : '💔 渐行渐远'}
+                          ? '🌙 若即若离'
+                          : '🌌 渐行渐远'}
                       </span>
                     </motion.div>
                   </motion.div>
