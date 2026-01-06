@@ -20,11 +20,15 @@ const fireConfetti = () => {
     return Math.random() * (max - min) + min
   }
 
-  const interval = setInterval(function() {
-    const timeLeft = animationEnd - Date.now()
+  let interval: any;
+
+// 2. 再进行赋值
+  interval = setInterval(function() {
+    const timeLeft = animationEnd - Date.now();
 
     if (timeLeft <= 0) {
-      return clearInterval(interval)
+        // 3. 现在在这里调用它是安全的，因为变量已经声明过了
+        return clearInterval(interval);
     }
 
     const particleCount = 50 * (timeLeft / duration)
