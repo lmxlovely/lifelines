@@ -196,7 +196,7 @@ export const FloatingParticles: React.FC<{
   )
 }
 
-// 重逢文字动画组件
+// 重逢文字动画组件 - 优化移动端适配
 export const ReunionText: React.FC<{
   show: boolean
   onAnimationComplete?: () => void
@@ -205,15 +205,22 @@ export const ReunionText: React.FC<{
     <AnimatePresence>
       {show && (
         <motion.div
-          className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none"
+          className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none px-4"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.5 }}
           onAnimationComplete={onAnimationComplete}
         >
+          {/* 背景遮罩 */}
+          <motion.div 
+            className="absolute inset-0 bg-black/30 backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          />
+          
           <motion.div
-            className="text-center"
+            className="text-center relative z-10 max-w-sm sm:max-w-md md:max-w-lg"
             initial={{ scale: 0.5, opacity: 0, y: 50 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 1.5, opacity: 0 }}
@@ -223,13 +230,14 @@ export const ReunionText: React.FC<{
               damping: 20,
             }}
           >
+            {/* 主标题 */}
             <motion.h2
-              className="text-4xl md:text-6xl font-display font-bold reunion-text mb-4"
+              className="text-2xl sm:text-4xl md:text-6xl font-display font-bold reunion-text mb-2 sm:mb-4 px-2"
               style={{
                 background: 'linear-gradient(135deg, #8B5CF6 0%, #EC4899 50%, #F59E0B 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
-                textShadow: '0 0 30px rgba(236, 72, 153, 0.5)',
+                filter: 'drop-shadow(0 0 20px rgba(236, 72, 153, 0.5))',
               }}
               animate={{
                 scale: [1, 1.05, 1],
@@ -242,22 +250,52 @@ export const ReunionText: React.FC<{
             >
               兜兜转转，还是你
             </motion.h2>
+            
+            {/* 日期 */}
             <motion.p
-              className="text-xl md:text-2xl text-white/80"
+              className="text-base sm:text-xl md:text-2xl text-white/90 font-medium"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
             >
               ✨ 2018.6.25 - 永远 ✨
             </motion.p>
+            
+            {/* 副标题 */}
             <motion.p
-              className="text-lg text-pink-300/70 mt-2"
+              className="text-sm sm:text-lg text-pink-300/80 mt-2 sm:mt-3"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.8 }}
             >
               有些人散了还会再相遇
             </motion.p>
+            
+            {/* 装饰心形 */}
+            <motion.div
+              className="mt-4 sm:mt-6 flex justify-center gap-2 sm:gap-4"
+              initial={{ opacity: 0, scale: 0 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 1.2, type: 'spring' }}
+            >
+              {['💕', '✨', '💕'].map((emoji, i) => (
+                <motion.span
+                  key={i}
+                  className="text-xl sm:text-2xl md:text-3xl"
+                  animate={{ 
+                    y: [0, -10, 0],
+                    rotate: i === 1 ? [0, 360] : [0, 10, -10, 0]
+                  }}
+                  transition={{ 
+                    duration: i === 1 ? 3 : 2, 
+                    repeat: Infinity,
+                    delay: i * 0.2
+                  }}
+                >
+                  {emoji}
+                </motion.span>
+              ))}
+            </motion.div>
           </motion.div>
         </motion.div>
       )}

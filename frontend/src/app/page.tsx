@@ -88,6 +88,18 @@ export default function Home() {
     }
   }, [isPlaying, storyData, musicEnabled, isMuted, showReunionText])
 
+  // 彩蛋音乐控制 - 彩蛋触发时播放 reunion-bgm
+  useEffect(() => {
+    if (showReunionText && storyData?.is_special && musicEnabled && !isMuted) {
+      stopNormalBgm()
+      // 延迟一点播放，让普通音乐完全停止
+      const timer = setTimeout(() => {
+        playReunionBgm()
+      }, 100)
+      return () => clearTimeout(timer)
+    }
+  }, [showReunionText, storyData?.is_special, musicEnabled, isMuted])
+
   // 自动播放逻辑
   useEffect(() => {
     if (!isPlaying || !storyData) return
@@ -103,11 +115,6 @@ export default function Home() {
             setTimeout(() => {
               setShowReunionText(true)
               setTriggerConfetti(true)
-              // 停止普通音乐，播放彩蛋专属音乐
-              if (musicEnabled && !isMuted) {
-                stopNormalBgm()
-                playReunionBgm()
-              }
             }, 500)
           }
           return prev
@@ -117,7 +124,7 @@ export default function Home() {
     }, 2500) // 每 2.5 秒推进一步
 
     return () => clearInterval(timer)
-  }, [isPlaying, storyData, musicEnabled, isMuted])
+  }, [isPlaying, storyData])
 
   // 控制函数
   const togglePlay = () => setIsPlaying(!isPlaying)
@@ -181,21 +188,21 @@ export default function Home() {
             transition={{ duration: 3, repeat: Infinity }}
           >
             <Sparkles
-              className={`w-8 h-8 ${isDestinyTheme ? 'text-yellow-400' : 'text-purple-500'}`}
+              className={`w-6 h-6 sm:w-8 sm:h-8 ${isDestinyTheme ? 'text-yellow-400' : 'text-purple-500'}`}
             />
             <h1
-              className={`text-4xl md:text-6xl font-display font-bold ${
+              className={`text-3xl sm:text-4xl md:text-6xl font-display font-bold ${
                 isDestinyTheme ? 'text-gradient' : 'text-gray-800'
               }`}
             >
               LifeLines
             </h1>
             <Sparkles
-              className={`w-8 h-8 ${isDestinyTheme ? 'text-yellow-400' : 'text-purple-500'}`}
+              className={`w-6 h-6 sm:w-8 sm:h-8 ${isDestinyTheme ? 'text-yellow-400' : 'text-purple-500'}`}
             />
           </motion.div>
           <p
-            className={`text-lg md:text-xl ${
+            className={`text-base sm:text-lg md:text-xl ${
               isDestinyTheme ? 'text-purple-200' : 'text-gray-600'
             }`}
           >
@@ -203,15 +210,15 @@ export default function Home() {
           </p>
         </motion.header>
 
-        {/* Input Form */}
+        {/* Input Form - 移动端优化 */}
         <motion.form
           onSubmit={handleSubmit}
-          className="max-w-2xl mx-auto mb-12"
+          className="max-w-2xl mx-auto mb-8 sm:mb-12 px-2"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2 }}
         >
-          <div className="flex flex-col md:flex-row gap-4 items-center justify-center">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-center justify-center">
             {/* Name 1 Input */}
             <div className="relative flex-1 w-full">
               <input
@@ -219,7 +226,7 @@ export default function Home() {
                 value={name1}
                 onChange={(e) => setName1(e.target.value)}
                 placeholder="第一个人的名字"
-                className={`w-full px-6 py-4 rounded-2xl text-lg transition-all duration-300 input-breathing ${
+                className={`w-full px-4 sm:px-6 py-3 sm:py-4 rounded-xl sm:rounded-2xl text-base sm:text-lg transition-all duration-300 input-breathing ${
                   isDestinyTheme
                     ? 'bg-white/10 border-2 border-purple-400/30 text-white placeholder-purple-300/50 focus:border-purple-400 focus:bg-white/15'
                     : 'bg-white border-2 border-purple-200 text-gray-800 placeholder-gray-400 focus:border-purple-500 shadow-lg'
@@ -238,10 +245,10 @@ export default function Home() {
                 repeat: Infinity,
                 ease: 'easeInOut',
               }}
-              className="relative"
+              className="relative hidden sm:block"
             >
               <Sparkles
-                className={`w-8 h-8 ${
+                className={`w-6 h-6 sm:w-8 sm:h-8 ${
                   isDestinyTheme ? 'text-yellow-400' : 'text-purple-500'
                 }`}
               />
@@ -254,7 +261,7 @@ export default function Home() {
                 value={name2}
                 onChange={(e) => setName2(e.target.value)}
                 placeholder="第二个人的名字"
-                className={`w-full px-6 py-4 rounded-2xl text-lg transition-all duration-300 input-breathing ${
+                className={`w-full px-4 sm:px-6 py-3 sm:py-4 rounded-xl sm:rounded-2xl text-base sm:text-lg transition-all duration-300 input-breathing ${
                   isDestinyTheme
                     ? 'bg-white/10 border-2 border-pink-400/30 text-white placeholder-pink-300/50 focus:border-pink-400 focus:bg-white/15'
                     : 'bg-white border-2 border-pink-200 text-gray-800 placeholder-gray-400 focus:border-pink-500 shadow-lg'
@@ -268,7 +275,7 @@ export default function Home() {
           <motion.button
             type="submit"
             disabled={isLoading || !name1.trim() || !name2.trim()}
-            className={`mt-6 w-full md:w-auto px-12 py-4 rounded-2xl text-lg font-semibold transition-all duration-300 ${
+            className={`mt-4 sm:mt-6 w-full sm:w-auto px-8 sm:px-12 py-3 sm:py-4 rounded-xl sm:rounded-2xl text-base sm:text-lg font-semibold transition-all duration-300 ${
               isDestinyTheme
                 ? 'bg-gradient-to-r from-purple-600 via-pink-500 to-orange-400 text-white hover:shadow-[0_0_30px_rgba(236,72,153,0.5)] disabled:opacity-50'
                 : 'bg-gradient-to-r from-purple-600 to-pink-500 text-white hover:shadow-xl disabled:opacity-50'
@@ -419,13 +426,13 @@ export default function Home() {
                   </motion.button>
                 </div>
 
-                {/* Progress Indicator */}
-                <div className="flex justify-center gap-2 mt-4">
+                {/* Progress Indicator - 移动端优化 */}
+                <div className="flex justify-center gap-1.5 sm:gap-2 mt-4 flex-wrap px-2">
                   {storyData.events.map((_, index) => (
                     <motion.button
                       key={index}
                       onClick={() => setCurrentIndex(index)}
-                      className={`w-3 h-3 rounded-full transition-all ${
+                      className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full transition-all ${
                         index === currentIndex
                           ? isDestinyTheme
                             ? 'bg-gradient-to-r from-purple-400 to-pink-400 scale-125'
@@ -444,12 +451,12 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Event Description */}
+              {/* Event Description - 移动端优化 */}
               <AnimatePresence mode="wait">
                 {currentEvent && (
                   <motion.div
                     key={currentIndex}
-                    className={`max-w-3xl mx-auto rounded-2xl p-8 text-center ${
+                    className={`max-w-3xl mx-auto rounded-2xl p-4 sm:p-6 md:p-8 text-center ${
                       isDestinyTheme
                         ? 'bg-gradient-to-br from-purple-900/50 to-pink-900/50 backdrop-blur-sm border border-purple-400/20'
                         : 'bg-white shadow-xl'
@@ -461,7 +468,7 @@ export default function Home() {
                   >
                     {/* Year Badge */}
                     <motion.div
-                      className={`inline-block px-6 py-2 rounded-full text-sm font-bold mb-4 ${
+                      className={`inline-block px-4 sm:px-6 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-bold mb-3 sm:mb-4 ${
                         isDestinyTheme
                           ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white'
                           : 'bg-purple-100 text-purple-700'
@@ -476,7 +483,7 @@ export default function Home() {
 
                     {/* Event Text */}
                     <motion.p
-                      className={`text-lg md:text-xl leading-relaxed ${
+                      className={`text-sm sm:text-base md:text-lg lg:text-xl leading-relaxed ${
                         isDestinyTheme ? 'text-purple-100' : 'text-gray-700'
                       }`}
                       initial={{ opacity: 0 }}
@@ -486,9 +493,9 @@ export default function Home() {
                       {currentEvent.event}
                     </motion.p>
 
-                    {/* Distance Indicator */}
+                    {/* Distance Indicator - 移动端优化 */}
                     <motion.div
-                      className={`mt-6 flex items-center justify-center gap-4 text-sm ${
+                      className={`mt-4 sm:mt-6 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-xs sm:text-sm ${
                         isDestinyTheme ? 'text-purple-300' : 'text-gray-500'
                       }`}
                       initial={{ opacity: 0 }}
