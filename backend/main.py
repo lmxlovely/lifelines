@@ -55,6 +55,7 @@ app.add_middleware(
 class StoryRequest(BaseModel):
     name1: str
     name2: str
+    password: Optional[str] = None  # 彩蛋密码验证
 
 
 class StoryEvent(BaseModel):
@@ -159,9 +160,12 @@ SPECIAL_STORY_LY_LMX = [
     }
 ]
 
+# 彩蛋密码
+SPECIAL_PASSWORD = "180625"
 
-def is_special_couple(name1: str, name2: str) -> bool:
-    """检查是否是特殊彩蛋组合"""
+
+def is_special_couple(name1: str, name2: str, password: str = None) -> bool:
+    """检查是否是特殊彩蛋组合（需要密码验证）"""
     names = {name1.strip(), name2.strip()}
     # 支持多种写法
     special_variants = [
@@ -174,9 +178,15 @@ def is_special_couple(name1: str, name2: str) -> bool:
     ]
     # 不区分大小写比较
     names_lower = {n.lower() for n in names}
+    name_match = False
     for variant in special_variants:
         if {v.lower() for v in variant} == names_lower:
-            return True
+            name_match = True
+            break
+    
+    # 名字匹配且密码正确才返回 True
+    if name_match and password == SPECIAL_PASSWORD:
+        return True
     return False
 
 
@@ -444,18 +454,20 @@ async def predict_story(request: StoryRequest):
     
     - **name1**: 第一个人的名字
     - **name2**: 第二个人的名字
+    - **password**: 彩蛋密码（可选）
     
     返回他们的命运故事时间线
     """
     
     name1 = request.name1.strip()
     name2 = request.name2.strip()
+    password = request.password.strip() if request.password else None
     
     if not name1 or not name2:
         raise HTTPException(status_code=400, detail="请输入两个人的名字")
     
-    # 检查是否是特殊彩蛋
-    if is_special_couple(name1, name2):
+    # 检查是否是特殊彩蛋（需要密码验证）
+    if is_special_couple(name1, name2, password):
         return StoryResponse(
             events=[StoryEvent(**event) for event in SPECIAL_STORY_LY_LMX],
             is_special=True,

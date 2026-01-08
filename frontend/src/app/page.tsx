@@ -13,6 +13,8 @@ export default function Home() {
   // 表单状态
   const [name1, setName1] = useState('')
   const [name2, setName2] = useState('')
+  const [password, setPassword] = useState('')  // 彩蛋密码
+  const [showPasswordInput, setShowPasswordInput] = useState(false)  // 是否显示密码输入框
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -50,6 +52,35 @@ export default function Home() {
     }
   }, [musicEnabled, isMuted])
 
+  // 检测是否是彩蛋人名组合
+  const isEasterEggNames = useCallback((n1: string, n2: string) => {
+    const namesArr = [n1.trim().toLowerCase(), n2.trim().toLowerCase()].sort()
+    const specialVariants = [
+      ['李彦', '李梦祥'],
+      ['李彦', '李夢祥'],
+      ['liyan', 'limengxiang'],
+      ['ly', 'lmx'],
+      ['彦', '梦祥'],
+    ]
+    for (const variant of specialVariants) {
+      const variantSorted = variant.map(v => v.toLowerCase()).sort()
+      if (namesArr[0] === variantSorted[0] && namesArr[1] === variantSorted[1]) {
+        return true
+      }
+    }
+    return false
+  }, [])
+
+  // 当名字变化时，检测是否需要显示密码框
+  useEffect(() => {
+    if (name1.trim() && name2.trim() && isEasterEggNames(name1, name2)) {
+      setShowPasswordInput(true)
+    } else {
+      setShowPasswordInput(false)
+      setPassword('')
+    }
+  }, [name1, name2, isEasterEggNames])
+
   // 提交表单
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -67,7 +98,11 @@ export default function Home() {
     setTriggerConfetti(false)
 
     try {
-      const data = await predictStory({ name1: name1.trim(), name2: name2.trim() })
+      const data = await predictStory({ 
+        name1: name1.trim(), 
+        name2: name2.trim(),
+        password: password.trim() || undefined  // 传递密码
+      })
       setStoryData(data)
       // 自动开始播放
       setTimeout(() => {
@@ -266,6 +301,42 @@ export default function Home() {
               />
             </div>
           </div>
+
+          {/* 密码输入框 - 仅当检测到彩蛋人名时显示 */}
+          <AnimatePresence>
+            {showPasswordInput && (
+              <motion.div
+                className="mt-4 flex justify-center"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <div className="relative w-full max-w-xs">
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="✨ 输入专属密码 ✨"
+                    className={`w-full px-4 py-3 rounded-xl text-center text-base transition-all duration-300 ${
+                      isDestinyTheme
+                        ? 'bg-gradient-to-r from-purple-900/50 to-pink-900/50 border-2 border-yellow-400/50 text-white placeholder-yellow-300/50 focus:border-yellow-400 focus:shadow-[0_0_20px_rgba(250,204,21,0.3)]'
+                        : 'bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-yellow-400 text-gray-800 placeholder-gray-400 focus:border-yellow-500 shadow-lg'
+                    }`}
+                    disabled={isLoading}
+                  />
+                  <motion.span
+                    className="absolute -top-2 left-1/2 -translate-x-1/2 text-xs px-2 py-0.5 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white"
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: 'spring', delay: 0.2 }}
+                  >
+                    💕 发现彩蛋
+                  </motion.span>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Submit Button */}
           <motion.button
@@ -556,7 +627,7 @@ export default function Home() {
                       }}
                       transition={{ duration: 2, repeat: Infinity }}
                     >
-                      💫 这是专属于你们的故事 💫
+                      💫 这是专属于我们的故事 💫
                     </motion.p>
                   </motion.div>
                 )}

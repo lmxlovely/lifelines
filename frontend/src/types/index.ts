@@ -16,4 +16,5 @@ export interface StoryResponse {
 export interface StoryRequest {
   name1: string
   name2: string
+  password?: string  // 彩蛋密码验证
 }
