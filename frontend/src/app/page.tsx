@@ -81,24 +81,20 @@ export default function Home() {
     }
   }
 
-  // 音乐播放控制 - 故事开始时播放普通音乐
+  // 音乐播放控制 - 根据是否是彩蛋人名播放不同音乐
   useEffect(() => {
-    if (isPlaying && storyData && musicEnabled && !isMuted && !showReunionText) {
-      playNormalBgm()
-    }
-  }, [isPlaying, storyData, musicEnabled, isMuted, showReunionText])
-
-  // 彩蛋音乐控制 - 彩蛋触发时播放 reunion-bgm
-  useEffect(() => {
-    if (showReunionText && storyData?.is_special && musicEnabled && !isMuted) {
-      stopNormalBgm()
-      // 延迟一点播放，让普通音乐完全停止
-      const timer = setTimeout(() => {
+    if (isPlaying && storyData && musicEnabled && !isMuted) {
+      // 如果是彩蛋，从一开始就播放 reunion-bgm
+      if (storyData.is_special) {
+        stopNormalBgm()
         playReunionBgm()
-      }, 100)
-      return () => clearTimeout(timer)
+      } else {
+        // 普通模式播放 story-bgm
+        stopReunionBgm()
+        playNormalBgm()
+      }
     }
-  }, [showReunionText, storyData?.is_special, musicEnabled, isMuted])
+  }, [isPlaying, storyData, musicEnabled, isMuted])
 
   // 自动播放逻辑
   useEffect(() => {

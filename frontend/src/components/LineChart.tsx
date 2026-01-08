@@ -103,11 +103,17 @@ const LineChart: React.FC<LineChartProps> = ({
 }) => {
   const controls = useAnimation()
   const [dimensions, setDimensions] = useState({ width: 800, height: 400 })
+  const [isMobile, setIsMobile] = useState(false)
   
   useEffect(() => {
     const updateDimensions = () => {
-      const width = Math.min(window.innerWidth - 40, 1200)
-      const height = Math.min(400, width * 0.5)
+      const screenWidth = window.innerWidth
+      const mobile = screenWidth < 640
+      setIsMobile(mobile)
+      
+      const width = Math.min(screenWidth - 32, 1200)
+      // 移动端高度更小一些
+      const height = mobile ? Math.min(280, width * 0.6) : Math.min(400, width * 0.5)
       setDimensions({ width, height })
     }
     
@@ -117,11 +123,14 @@ const LineChart: React.FC<LineChartProps> = ({
   }, [])
   
   const { width, height } = dimensions
-  const padding = { top: 40, right: 60, bottom: 60, left: 60 }
+  // 移动端减小 padding
+  const padding = isMobile 
+    ? { top: 25, right: 15, bottom: 45, left: 15 }
+    : { top: 40, right: 60, bottom: 60, left: 60 }
   const chartWidth = width - padding.left - padding.right
   const chartHeight = height - padding.top - padding.bottom
   const centerY = height / 2
-  const maxOffset = chartHeight / 2 - 20
+  const maxOffset = chartHeight / 2 - 10
 
   // 计算可见事件（到当前索引为止）
   const visibleEvents = useMemo(() => {
@@ -263,11 +272,16 @@ const LineChart: React.FC<LineChartProps> = ({
           transition={{ duration: 1 }}
         />
 
-        {/* 年份标签 */}
+        {/* 年份标签 - 移动端优化 */}
         {events.map((event, index) => {
           const xStep = chartWidth / Math.max(events.length - 1, 1)
           const x = padding.left + index * xStep
           const isVisible = index <= currentIndex
+          
+          // 移动端只显示部分年份（每隔一个或当前/首尾）
+          const showYear = !isMobile || index === 0 || index === events.length - 1 || index === currentIndex || index % 2 === 0
+          // 移动端不显示 phase 文字，避免重叠
+          const showPhase = !isMobile && event.phase && isVisible
           
           return (
             <motion.g
@@ -276,16 +290,18 @@ const LineChart: React.FC<LineChartProps> = ({
               animate={{ opacity: isVisible ? 1 : 0.3, y: 0 }}
               transition={{ delay: index * 0.1 }}
             >
-              <text
-                x={x}
-                y={height - 15}
-                textAnchor="middle"
-                className="text-xs font-medium"
-                fill={isSpecial ? '#A78BFA' : '#6B7280'}
-              >
-                {event.year}
-              </text>
-              {event.phase && isVisible && (
+              {showYear && (
+                <text
+                  x={x}
+                  y={height - (isMobile ? 8 : 15)}
+                  textAnchor="middle"
+                  className={isMobile ? "text-[8px] font-medium" : "text-xs font-medium"}
+                  fill={isSpecial ? '#A78BFA' : '#6B7280'}
+                >
+                  {isMobile ? String(event.year).slice(-2) : event.year}
+                </text>
+              )}
+              {showPhase && (
                 <text
                   x={x}
                   y={height - 35}
@@ -460,12 +476,12 @@ const LineChart: React.FC<LineChartProps> = ({
           </motion.g>
         )}
 
-        {/* 名字标签 */}
+        {/* 名字标签 - 移动端优化位置 */}
         <motion.text
-          x={padding.left - 10}
-          y={padding.top}
-          textAnchor="end"
-          className="text-sm font-medium"
+          x={isMobile ? padding.left + 5 : padding.left - 10}
+          y={isMobile ? padding.top - 8 : padding.top}
+          textAnchor={isMobile ? "start" : "end"}
+          className={isMobile ? "text-xs font-medium" : "text-sm font-medium"}
           fill={isSpecial ? '#EC4899' : '#8B5CF6'}
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -475,10 +491,10 @@ const LineChart: React.FC<LineChartProps> = ({
         </motion.text>
         
         <motion.text
-          x={padding.left - 10}
-          y={height - padding.bottom}
-          textAnchor="end"
-          className="text-sm font-medium"
+          x={isMobile ? padding.left + 5 : padding.left - 10}
+          y={isMobile ? height - padding.bottom + 15 : height - padding.bottom}
+          textAnchor={isMobile ? "start" : "end"}
+          className={isMobile ? "text-xs font-medium" : "text-sm font-medium"}
           fill={isSpecial ? '#8B5CF6' : '#EC4899'}
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -487,45 +503,49 @@ const LineChart: React.FC<LineChartProps> = ({
           {name2}
         </motion.text>
 
-        {/* Distance 标注 */}
-        <motion.text
-          x={width - padding.right + 10}
-          y={padding.top}
-          textAnchor="start"
-          className="text-xs"
-          fill={isSpecial ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.3)'}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1 }}
-        >
-          远离
-        </motion.text>
-        
-        <motion.text
-          x={width - padding.right + 10}
-          y={centerY}
-          textAnchor="start"
-          className="text-xs"
-          fill={isSpecial ? '#F59E0B' : '#10B981'}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.1 }}
-        >
-          重合 ✨
-        </motion.text>
-        
-        <motion.text
-          x={width - padding.right + 10}
-          y={height - padding.bottom}
-          textAnchor="start"
-          className="text-xs"
-          fill={isSpecial ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.3)'}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.2 }}
-        >
-          远离
-        </motion.text>
+        {/* Distance 标注 - 移动端隐藏或简化 */}
+        {!isMobile && (
+          <>
+            <motion.text
+              x={width - padding.right + 10}
+              y={padding.top}
+              textAnchor="start"
+              className="text-xs"
+              fill={isSpecial ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.3)'}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1 }}
+            >
+              远离
+            </motion.text>
+            
+            <motion.text
+              x={width - padding.right + 10}
+              y={centerY}
+              textAnchor="start"
+              className="text-xs"
+              fill={isSpecial ? '#F59E0B' : '#10B981'}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1.1 }}
+            >
+              重合 ✨
+            </motion.text>
+            
+            <motion.text
+              x={width - padding.right + 10}
+              y={height - padding.bottom}
+              textAnchor="start"
+              className="text-xs"
+              fill={isSpecial ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.3)'}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1.2 }}
+            >
+              远离
+            </motion.text>
+          </>
+        )}
       </svg>
     </div>
   )
